@@ -819,7 +819,7 @@ class AllCategoryState extends State<AllCategory> {
                     highlightColor: Theme.of(context).colorScheme.simmerHigh,
                     child: catLoading()))
             : Container(
-                padding: const EdgeInsets.only(top: 10, left: 25),
+                padding: const EdgeInsets.only(left: 30),
                 child: Wrap(
                   // crossAxisAlignment: WrapCrossAlignment.center,
                   // runAlignment: WrapAlignment.spaceBetween,
@@ -905,8 +905,8 @@ class AllCategoryState extends State<AllCategory> {
                                 child: Text(
                                   breakTextIntoLines(capitalize(catList[index]
                                       .name!
-                                      .toLowerCase())), // Split text on spaces
-                                  maxLines: 2,
+                                      .toUpperCase())), // Split text on spaces
+                                  maxLines: 5,
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodySmall!
@@ -915,7 +915,7 @@ class AllCategoryState extends State<AllCategory> {
                                             .colorScheme
                                             .fontColor,
                                         fontWeight: FontWeight.w600,
-                                        fontSize: 12,
+                                        fontSize: 14,
                                       ),
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.center,

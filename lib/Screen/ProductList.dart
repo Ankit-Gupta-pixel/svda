@@ -459,6 +459,7 @@ class StateProduct extends State<ProductListScreen>
                                       children: <Widget>[
                                         Text(
                                           model.name!,
+                                          textScaler: const TextScaler.linear(0.9),
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleMedium!
@@ -466,7 +467,7 @@ class StateProduct extends State<ProductListScreen>
                                                   color: Theme.of(context)
                                                       .colorScheme
                                                       .lightBlack),
-                                          maxLines: 1,
+                                          maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         model.prVarientList![model.selVarient!]

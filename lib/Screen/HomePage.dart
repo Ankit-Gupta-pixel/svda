@@ -1533,7 +1533,7 @@ class _HomePageState extends State<HomePage>
               'Welcome ${userName == "" ? getTranslated(context, 'GUEST')! : userName}',
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 15,
+                fontSize: 18,
                 fontWeight: FontWeight.w600,
                 fontFamily: "Poppins",
               ),
@@ -2250,7 +2250,7 @@ class _HomePageState extends State<HomePage>
                           : featuredSectionList[index].shortDesc ?? "",
                       style: Theme.of(context).textTheme.titleSmall!.copyWith(
                             color: Colors.black,
-                            fontSize: 16,
+                            fontSize: 18,
                           ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -2271,7 +2271,7 @@ class _HomePageState extends State<HomePage>
                           : featuredSectionList[index].title ?? "",
                       style: Theme.of(context).textTheme.titleMedium!.copyWith(
                             color: Theme.of(context).colorScheme.fontColor,
-                            fontSize: 18,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
@@ -2523,8 +2523,8 @@ class _HomePageState extends State<HomePage>
                                   padding: const EdgeInsetsDirectional.only(
                                       bottom: 5.0, top: 8.0),
                                   child: Container(
-                                    height: 65,
-                                    width: 65,
+                                    height: 75,
+                                    width: 70,
                                     decoration: BoxDecoration(
                                       boxShadow: [
                                         BoxShadow(
@@ -2547,9 +2547,9 @@ class _HomePageState extends State<HomePage>
                                     child: Center(
                                       child: networkImageCommon(
                                         catList[index].image!,
-                                        30,
-                                        width: 40,
-                                        height: 40,
+                                        10,
+                                        width: 60,
+                                        height: 60,
                                         false,
                                       ),
                                     ),
@@ -2599,8 +2599,8 @@ class _HomePageState extends State<HomePage>
                                 child: Text(
                                   breakTextIntoLines(capitalize(catList[index]
                                       .name!
-                                      .toLowerCase())), // Split text on spaces
-                                  maxLines: 2,
+                                      .toUpperCase())), // Split text on spaces
+                                  maxLines: 5,
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodySmall!
@@ -2609,7 +2609,7 @@ class _HomePageState extends State<HomePage>
                                             .colorScheme
                                             .fontColor,
                                         fontWeight: FontWeight.w600,
-                                        fontSize: 12,
+                                        fontSize: 16,
                                       ),
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.center,
@@ -4035,7 +4035,7 @@ class _HomePageState extends State<HomePage>
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
+                      padding: const EdgeInsets.only(top: 80.0),
                       child: Stack(
                         children: [
                           Positioned.fill(
