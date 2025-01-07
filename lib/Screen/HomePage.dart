@@ -2458,176 +2458,124 @@ class _HomePageState extends State<HomePage>
   _catList() {
     return Selector<HomeProvider, bool>(
       builder: (context, data, child) {
-        // debugPrint("Cart : $data");
         return data
             ? SizedBox(
-                width: double.infinity,
-                child: Shimmer.fromColors(
-                  baseColor: Theme.of(context).colorScheme.simmerBase,
-                  highlightColor: Theme.of(context).colorScheme.simmerHigh,
-                  child: catLoading(),
-                ),
-              )
+          width: double.infinity,
+          child: Shimmer.fromColors(
+            baseColor: Theme.of(context).colorScheme.simmerBase,
+            highlightColor: Theme.of(context).colorScheme.simmerHigh,
+            child: catLoading(),
+          ),
+        )
             : Container(
-                // height: 100,
-                padding: const EdgeInsets.only(top: 10, left: 10),
-                // color: Colors.green,
-                child: Wrap(
-                  alignment: catList.length <= 4
-                      ? WrapAlignment.start
-                      : WrapAlignment.center,
-                  // direction:
-                  //     Axis.vertical,
-                  spacing: 20.0,
-                  runSpacing: 10.0,
-                  children: List.generate(
-                    // catList.length < 9 ? catList.length : 9,
-                    catList.length,
-                    (index) {
-                      // debugPrint("catList.length:  ${catList.length}");
-
-                      // if (index == 0) {
-                      //   return const SizedBox(
-                      //     width: 0,
-                      //   );
-                      // } else {
-                      return Padding(
-                        padding: EdgeInsets.zero,
-                        // EdgeInsets.only(left: index == 5 ? 22.0 : 0.0),
-                        child: GestureDetector(
-                          onTap: () async {
-                            if (catList[index].subList == null ||
-                                catList[index].subList!.isEmpty) {
-                              await Navigator.pushNamed(
-                                  context, Routers.productListScreen,
-                                  arguments: {
-                                    "name": catList[index].name,
-                                    "id": catList[index].id,
-                                    "tag": false,
-                                    "fromSeller": false,
-                                  });
-                            } else {
-                              await Navigator.pushNamed(
-                                  context, Routers.subCategoryScreen,
-                                  arguments: {
-                                    "title": catList[index].name!,
-                                    "subList": catList[index].subList,
-                                  });
-                            }
-                          },
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                      bottom: 5.0, top: 8.0),
-                                  child: Container(
-                                    height: 75,
-                                    width: 70,
-                                    decoration: BoxDecoration(
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .fontColor
-                                              .withOpacity(0.048),
-                                          spreadRadius: 2,
-                                          blurRadius: 13,
-                                          offset: const Offset(0, 0),
-                                        ),
-                                      ],
-                                      color: const Color.fromARGB(
-                                              255, 232, 232, 232)
-                                          .withOpacity(0.6),
-                                      borderRadius: const BorderRadius.all(
-                                        Radius.circular(10),
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: networkImageCommon(
-                                        catList[index].image!,
-                                        10,
-                                        width: 60,
-                                        height: 60,
-                                        false,
-                                      ),
-                                    ),
-                                    // child: Center(
-                                    //   child: networkImageCommon(
-                                    //     catList[index].image!,
-                                    //     30,
-                                    //     width: 40,
-                                    //     height: 40,
-                                    //     false,
-                                    //   ),
-                                    // ),
-                                  )
-                                  // Container(
-                                  //   decoration: BoxDecoration(
-                                  //     color: Theme.of(context).cardColor,
-                                  //     shape: BoxShape.circle,
-                                  // boxShadow: [
-                                  //   BoxShadow(
-                                  //     color: Theme.of(context)
-                                  //         .colorScheme
-                                  //         .fontColor
-                                  //         .withOpacity(0.048),
-                                  //     spreadRadius: 2,
-                                  //     blurRadius: 13,
-                                  //     offset: const Offset(0,
-                                  //         0), // changes position of shadow
-                                  //   ),
-                                  // ],
-                                  //   ),
-                                  // child: CircleAvatar(
-                                  //   radius: 32.0,
-                                  //   backgroundColor: Colors.transparent,
-                                  //   child: ClipRRect(
-                                  //     borderRadius: BorderRadius.circular(32),
-                                  //     child: networkImageCommon(
-                                  //         catList[index].image!,
-                                  //         60,
-                                  //         width: double.maxFinite,
-                                  //         height: double.maxFinite,
-                                  //         false),
-                                  //   ),
-                                  // ),
-                                  // ),
-                                  ),
-                              SizedBox(
-                                child: Text(
-                                  breakTextIntoLines(capitalize(catList[index]
-                                      .name!
-                                      .toUpperCase())), // Split text on spaces
-                                  maxLines: 5,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall!
-                                      .copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .fontColor,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                      ),
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
+          padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4, // 3 items per row
+              crossAxisSpacing: 5, // Spacing between columns
+              mainAxisSpacing: 5, // Spacing between rows
+              childAspectRatio: 0.7, // Adjust for item width/height ratio
+            ),
+            itemCount: catList.length,
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () async {
+                  if (catList[index].subList == null ||
+                      catList[index].subList!.isEmpty) {
+                    await Navigator.pushNamed(
+                      context,
+                      Routers.productListScreen,
+                      arguments: {
+                        "name": catList[index].name,
+                        "id": catList[index].id,
+                        "tag": false,
+                        "fromSeller": false,
+                      },
+                    );
+                  } else {
+                    await Navigator.pushNamed(
+                      context,
+                      Routers.subCategoryScreen,
+                      arguments: {
+                        "title": catList[index].name!,
+                        "subList": catList[index].subList,
+                      },
+                    );
+                  }
+                },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      height: 75,
+                      width: 70,
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .fontColor
+                                .withOpacity(0.048),
+                            spreadRadius: 2,
+                            blurRadius: 13,
+                            offset: const Offset(0, 0),
                           ),
+                        ],
+                        color: const Color.fromARGB(255, 232, 232, 232)
+                            .withOpacity(0.6),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(10),
                         ),
-                      );
-                      // }
-                    },
-                  ),
+                      ),
+                      child: Center(
+                        child: networkImageCommon(
+                          catList[index].image!,
+                          10,
+                          width: 60,
+                          height: 60,
+                          false,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      (formatText(catList[index].name!)),
+                      maxLines: 2,
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        color: Theme.of(context).colorScheme.fontColor,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               );
+            },
+          ),
+        );
       },
       selector: (_, homeProvider) => homeProvider.catLoading,
     );
   }
+
+  String formatText(String input) {
+    // Split the input text into words
+    List<String> words = input.split(' ');
+
+    // Group words into chunks of 2 per line
+    List<String> lines = [];
+    for (int i = 0; i < words.length; i += 2) {
+      lines.add(words.sublist(i, i + 2 > words.length ? words.length : i + 2).join(' '));
+    }
+
+    // Combine chunks into a string with line breaks
+    return lines.take(2).join('\n'); // Limit to 2 lines
+  }
+
 
   String breakTextIntoLines(String text) {
     return text.split(' ').join('\n');
