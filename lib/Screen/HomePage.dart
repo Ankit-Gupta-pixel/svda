@@ -1129,7 +1129,7 @@ class _HomePageState extends State<HomePage>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "Catergories",
+            "Shop by Category",
             style: TextStyle(
               color: Theme.of(context).colorScheme.black,
               fontSize: 16,
