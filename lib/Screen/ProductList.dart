@@ -6,6 +6,7 @@ import 'package:eshop/Helper/SqliteData.dart';
 import 'package:eshop/Provider/CartProvider.dart';
 import 'package:eshop/Provider/FavoriteProvider.dart';
 import 'package:eshop/Provider/UserProvider.dart';
+import 'package:eshop/Provider/get_brands.dart';
 import 'package:eshop/app/routes.dart';
 import 'package:eshop/ui/widgets/AppBtn.dart';
 import 'package:eshop/ui/widgets/SimBtn.dart';
@@ -121,11 +122,18 @@ class StateProduct extends State<ProductListScreen>
   String lastWords = '';
   List<LocaleName> _localeNames = [];
   bool isFilterClear = false;
+  List<String> selectedBrands = [];
+  String? brandIds;
+
+  void fetchFilteredProducts() {
+    brandIds = selectedBrands.join(',');
+  }
 
   @override
   void initState() {
     super.initState();
     offset = 0;
+
     controller = ScrollController(keepScrollOffset: true);
     controller.addListener(_scrollListener);
     _controller1.addListener(() {
@@ -190,6 +198,21 @@ class StateProduct extends State<ProductListScreen>
     }
   }
 
+  List<bool> isselectedBrands = [];
+  int? selectedBrandId;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final providerBrand =
+    Provider.of<GetBrandsProvider>(context, listen: false);
+    providerBrand.getBrandId(brandId: "1");
+    final dataLength = providerBrand.brandModel?.data?.length ?? 0;
+
+    if (isselectedBrands.length != dataLength) {
+      isselectedBrands = List<bool>.filled(dataLength, false);
+    }
+  }
+
   @override
   void dispose() {
     buttonController!.dispose();
@@ -215,19 +238,19 @@ class StateProduct extends State<ProductListScreen>
         appBar: widget.fromSeller!
             ? null
             : getAppBar(
-                widget.name == null
-                    ? getTranslated(context, 'ALL_PRODUCTS_LBL')!
-                    : widget.name!,
-                context),
+            widget.name == null
+                ? getTranslated(context, 'ALL_PRODUCTS_LBL')!
+                : widget.name!,
+            context),
         // key: _scaffoldKey,
         body: _isNetworkAvail
             ? Stack(
-                children: <Widget>[
-                  _showForm(),
-                  showCircularProgress(context, _isProgress,
-                      Theme.of(context).colorScheme.primarytheme),
-                ],
-              )
+          children: <Widget>[
+            _showForm(),
+            showCircularProgress(context, _isProgress,
+                Theme.of(context).colorScheme.primarytheme),
+          ],
+        )
             : noInternet(context));
   }
 
@@ -266,29 +289,29 @@ class StateProduct extends State<ProductListScreen>
         padding: const EdgeInsetsDirectional.only(bottom: 10.0, top: 50.0),
         child: Center(
             child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primarytheme,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(80.0)),
-          ),
-          onPressed: () {
-            Navigator.pushReplacement(
-                context,
-                CupertinoPageRoute(
-                    builder: (BuildContext context) => super.widget));
-          },
-          child: Ink(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: width / 1.2, minHeight: 45),
-              alignment: Alignment.center,
-              child: Text(getTranslated(context, 'TRY_AGAIN_INT_LBL')!,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      color: Theme.of(context).colorScheme.white,
-                      fontWeight: FontWeight.normal)),
-            ),
-          ),
-        )));
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primarytheme,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(80.0)),
+              ),
+              onPressed: () {
+                Navigator.pushReplacement(
+                    context,
+                    CupertinoPageRoute(
+                        builder: (BuildContext context) => super.widget));
+              },
+              child: Ink(
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: width / 1.2, minHeight: 45),
+                  alignment: Alignment.center,
+                  child: Text(getTranslated(context, 'TRY_AGAIN_INT_LBL')!,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                          color: Theme.of(context).colorScheme.white,
+                          fontWeight: FontWeight.normal)),
+                ),
+              ),
+            )));
   }
 
   Widget listItem(int index) {
@@ -310,7 +333,7 @@ class StateProduct extends State<ProductListScreen>
       }
 
       double price =
-          double.parse(model.prVarientList![model.selVarient!].disPrice!);
+      double.parse(model.prVarientList![model.selVarient!].disPrice!);
       if (price == 0) {
         price = double.parse(model.prVarientList![model.selVarient!].price!);
       }
@@ -318,7 +341,7 @@ class StateProduct extends State<ProductListScreen>
       double off = 0;
       if (model.prVarientList![model.selVarient!].disPrice! != "0") {
         off = (double.parse(model.prVarientList![model.selVarient!].price!) -
-                double.parse(model.prVarientList![model.selVarient!].disPrice!))
+            double.parse(model.prVarientList![model.selVarient!].disPrice!))
             .toDouble();
         off = off *
             100 /
@@ -332,11 +355,11 @@ class StateProduct extends State<ProductListScreen>
           animationController: _animationController,
           child: Padding(
               padding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8),
+              const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8),
               child: Consumer<CartProvider>(
                 builder: (context, data, child) {
                   SectionModel? tempId = data.cartList.firstWhereOrNull((cp) =>
-                      cp.id == model.id &&
+                  cp.id == model.id &&
                       cp.varientId ==
                           model.prVarientList![model.selVarient!].id!);
                   if (tempId != null) {
@@ -389,63 +412,63 @@ class StateProduct extends State<ProductListScreen>
                                             Positioned.fill(
                                                 child: model.availability == "0"
                                                     ? Container(
-                                                        height: 55,
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .white70,
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(2),
-                                                        child: Center(
-                                                          child: Text(
-                                                            getTranslated(
-                                                                context,
-                                                                'OUT_OF_STOCK_LBL')!,
-                                                            style: Theme.of(
-                                                                    context)
-                                                                .textTheme
-                                                                .bodySmall!
-                                                                .copyWith(
-                                                                  color: Colors
-                                                                      .red,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                ),
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                          ),
-                                                        ),
-                                                      )
+                                                  height: 55,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .white70,
+                                                  padding:
+                                                  const EdgeInsets
+                                                      .all(2),
+                                                  child: Center(
+                                                    child: Text(
+                                                      getTranslated(
+                                                          context,
+                                                          'OUT_OF_STOCK_LBL')!,
+                                                      style: Theme.of(
+                                                          context)
+                                                          .textTheme
+                                                          .bodySmall!
+                                                          .copyWith(
+                                                        color: Colors
+                                                            .red,
+                                                        fontWeight:
+                                                        FontWeight
+                                                            .bold,
+                                                      ),
+                                                      textAlign: TextAlign
+                                                          .center,
+                                                    ),
+                                                  ),
+                                                )
                                                     : const SizedBox.shrink()),
                                             off != 0
                                                 ? Container(
-                                                    decoration:
-                                                        const BoxDecoration(
-                                                      color: colors.red,
-                                                    ),
-                                                    margin:
-                                                        const EdgeInsets.all(5),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              5.0),
-                                                      child: Text(
-                                                        model.isSalesOn == "1"
-                                                            ? double.parse(model
-                                                                    .saleDis!)
-                                                                .toStringAsFixed(
-                                                                    2)
-                                                            : "${off.toStringAsFixed(2)}%",
-                                                        style: const TextStyle(
-                                                            color: colors
-                                                                .whiteTemp,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            fontSize: 9),
-                                                      ),
-                                                    ),
-                                                  )
+                                              decoration:
+                                              const BoxDecoration(
+                                                color: colors.red,
+                                              ),
+                                              margin:
+                                              const EdgeInsets.all(5),
+                                              child: Padding(
+                                                padding:
+                                                const EdgeInsets.all(
+                                                    5.0),
+                                                child: Text(
+                                                  model.isSalesOn == "1"
+                                                      ? double.parse(model
+                                                      .saleDis!)
+                                                      .toStringAsFixed(
+                                                      2)
+                                                      : "${off.toStringAsFixed(2)}%",
+                                                  style: const TextStyle(
+                                                      color: colors
+                                                          .whiteTemp,
+                                                      fontWeight:
+                                                      FontWeight.bold,
+                                                      fontSize: 9),
+                                                ),
+                                              ),
+                                            )
                                                 : const SizedBox.shrink()
                                           ],
                                         ))),
@@ -455,279 +478,280 @@ class StateProduct extends State<ProductListScreen>
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      CrossAxisAlignment.start,
                                       children: <Widget>[
                                         Text(
                                           model.name!,
-                                          textScaler: const TextScaler.linear(0.9),
+                                          textScaler:
+                                          const TextScaler.linear(0.9),
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleMedium!
                                               .copyWith(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .lightBlack),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .lightBlack),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         model.prVarientList![model.selVarient!]
-                                                        .attr_name !=
-                                                    null &&
-                                                model
-                                                    .prVarientList![
-                                                        model.selVarient!]
-                                                    .attr_name!
-                                                    .isNotEmpty
+                                            .attr_name !=
+                                            null &&
+                                            model
+                                                .prVarientList![
+                                            model.selVarient!]
+                                                .attr_name!
+                                                .isNotEmpty
                                             ? ListView.builder(
-                                                physics:
-                                                    const NeverScrollableScrollPhysics(),
-                                                shrinkWrap: true,
-                                                itemCount: att.length >= 2
-                                                    ? 2
-                                                    : att.length,
-                                                itemBuilder: (context, index) {
-                                                  return Row(children: [
-                                                    Flexible(
-                                                      child: Text(
-                                                        att[index].trim() + ":",
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        style: Theme.of(context)
-                                                            .textTheme
-                                                            .titleSmall!
-                                                            .copyWith(
-                                                                color: Theme.of(
-                                                                        context)
-                                                                    .colorScheme
-                                                                    .lightBlack),
-                                                      ),
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsetsDirectional
-                                                              .only(start: 5.0),
-                                                      child: Text(
-                                                        val[index],
-                                                        style: Theme.of(context)
-                                                            .textTheme
-                                                            .titleSmall!
-                                                            .copyWith(
-                                                                color: Theme.of(
-                                                                        context)
-                                                                    .colorScheme
-                                                                    .lightBlack,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                      ),
-                                                    )
-                                                  ]);
-                                                })
+                                            physics:
+                                            const NeverScrollableScrollPhysics(),
+                                            shrinkWrap: true,
+                                            itemCount: att.length >= 2
+                                                ? 2
+                                                : att.length,
+                                            itemBuilder: (context, index) {
+                                              return Row(children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    att[index].trim() + ":",
+                                                    overflow: TextOverflow
+                                                        .ellipsis,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .titleSmall!
+                                                        .copyWith(
+                                                        color: Theme.of(
+                                                            context)
+                                                            .colorScheme
+                                                            .lightBlack),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                  const EdgeInsetsDirectional
+                                                      .only(start: 5.0),
+                                                  child: Text(
+                                                    val[index],
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .titleSmall!
+                                                        .copyWith(
+                                                        color: Theme.of(
+                                                            context)
+                                                            .colorScheme
+                                                            .lightBlack,
+                                                        fontWeight:
+                                                        FontWeight
+                                                            .bold),
+                                                  ),
+                                                )
+                                              ]);
+                                            })
                                             : const SizedBox.shrink(),
                                         model.noOfRating! != "0"
                                             ? Row(
-                                                children: [
-                                                  RatingBarIndicator(
-                                                    rating: double.parse(
-                                                        model.rating!),
-                                                    itemBuilder:
-                                                        (context, index) =>
-                                                            const Icon(
-                                                      Icons.star_rate_rounded,
-                                                      color: Colors.amber,
-                                                    ),
-                                                    unratedColor: Colors.grey
-                                                        .withOpacity(0.5),
-                                                    itemCount: 5,
-                                                    itemSize: 18.0,
-                                                    direction: Axis.horizontal,
-                                                  ),
-                                                  Text(
-                                                    " (${model.noOfRating!})",
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .labelSmall,
-                                                  )
-                                                ],
-                                              )
+                                          children: [
+                                            RatingBarIndicator(
+                                              rating: double.parse(
+                                                  model.rating!),
+                                              itemBuilder:
+                                                  (context, index) =>
+                                              const Icon(
+                                                Icons.star_rate_rounded,
+                                                color: Colors.amber,
+                                              ),
+                                              unratedColor: Colors.grey
+                                                  .withOpacity(0.5),
+                                              itemCount: 5,
+                                              itemSize: 18.0,
+                                              direction: Axis.horizontal,
+                                            ),
+                                            Text(
+                                              " (${model.noOfRating!})",
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelSmall,
+                                            )
+                                          ],
+                                        )
                                             : const SizedBox.shrink(),
                                         Row(
                                           children: <Widget>[
                                             Text(
                                                 model.isSalesOn == "1"
                                                     ? getPriceFormat(
-                                                        context,
-                                                        double.parse(model
-                                                            .prVarientList![model
-                                                                .selVarient!]
-                                                            .saleFinalPrice!))!
+                                                    context,
+                                                    double.parse(model
+                                                        .prVarientList![model
+                                                        .selVarient!]
+                                                        .saleFinalPrice!))!
                                                     : '${getPriceFormat(context, price)!} ',
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .titleSmall!
                                                     .copyWith(
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .fontColor,
-                                                        fontWeight:
-                                                            FontWeight.bold)),
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .fontColor,
+                                                    fontWeight:
+                                                    FontWeight.bold)),
                                             Text(
                                               double.parse(model
-                                                          .prVarientList![
-                                                              model.selVarient!]
-                                                          .disPrice!) !=
-                                                      0
+                                                  .prVarientList![
+                                              model.selVarient!]
+                                                  .disPrice!) !=
+                                                  0
                                                   ? getPriceFormat(
-                                                      context,
-                                                      double.parse(model
-                                                          .prVarientList![
-                                                              model.selVarient!]
-                                                          .price!))!
+                                                  context,
+                                                  double.parse(model
+                                                      .prVarientList![
+                                                  model.selVarient!]
+                                                      .price!))!
                                                   : "",
                                               style: Theme.of(context)
                                                   .textTheme
                                                   .labelSmall!
                                                   .copyWith(
-                                                      decoration: TextDecoration
-                                                          .lineThrough,
-                                                      letterSpacing: 0),
+                                                  decoration: TextDecoration
+                                                      .lineThrough,
+                                                  letterSpacing: 0),
                                             ),
                                           ],
                                         ),
                                         _controller[index].text != "0"
                                             ? Row(
-                                                children: [
-                                                  //Spacer(),
-                                                  model.availability == "0"
-                                                      ? const SizedBox.shrink()
-                                                      : cartBtnList
-                                                          ? Row(
-                                                              children: <Widget>[
-                                                                Row(
-                                                                  children: <Widget>[
-                                                                    InkWell(
-                                                                      child:
-                                                                          Card(
-                                                                        shape:
-                                                                            RoundedRectangleBorder(
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(50),
-                                                                        ),
-                                                                        child:
-                                                                            const Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(8.0),
-                                                                          child:
-                                                                              Icon(
-                                                                            Icons.remove,
-                                                                            size:
-                                                                                15,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      onTap:
-                                                                          () {
-                                                                        if (_isProgress ==
-                                                                                false &&
-                                                                            (int.parse(_controller[index].text.trim()) >
-                                                                                0)) {
-                                                                          removeFromCart(
-                                                                              index);
-                                                                        }
-                                                                      },
-                                                                    ),
-                                                                    SizedBox(
-                                                                      width: 37,
-                                                                      height:
-                                                                          20,
-                                                                      child:
-                                                                          Stack(
-                                                                        children: [
-                                                                          TextField(
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            readOnly:
-                                                                                true,
-                                                                            style:
-                                                                                TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.fontColor),
-                                                                            controller:
-                                                                                _controller[index],
-                                                                            // _controller[index],
-                                                                            decoration:
-                                                                                const InputDecoration(
-                                                                              border: InputBorder.none,
-                                                                            ),
-                                                                          ),
-                                                                          PopupMenuButton<
-                                                                              String>(
-                                                                            tooltip:
-                                                                                '',
-                                                                            icon:
-                                                                                const Icon(
-                                                                              Icons.arrow_drop_down,
-                                                                              size: 1,
-                                                                            ),
-                                                                            onSelected:
-                                                                                (String value) {
-                                                                              if (_isProgress == false) {
-                                                                                (
-                                                                                  index,
-                                                                                  value,
-                                                                                  2
-                                                                                );
-                                                                              }
-                                                                            },
-                                                                            itemBuilder:
-                                                                                (BuildContext context) {
-                                                                              return model.itemsCounter!.map<PopupMenuItem<String>>((String value) {
-                                                                                return PopupMenuItem(value: value, child: Text(value, style: TextStyle(color: Theme.of(context).colorScheme.fontColor)));
-                                                                              }).toList();
-                                                                            },
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    ),
-                                                                    // ),
+                                          children: [
+                                            //Spacer(),
+                                            model.availability == "0"
+                                                ? const SizedBox.shrink()
+                                                : cartBtnList
+                                                ? Row(
+                                              children: <Widget>[
+                                                Row(
+                                                  children: <Widget>[
+                                                    InkWell(
+                                                      child:
+                                                      Card(
+                                                        shape:
+                                                        RoundedRectangleBorder(
+                                                          borderRadius:
+                                                          BorderRadius.circular(50),
+                                                        ),
+                                                        child:
+                                                        const Padding(
+                                                          padding:
+                                                          EdgeInsets.all(8.0),
+                                                          child:
+                                                          Icon(
+                                                            Icons.remove,
+                                                            size:
+                                                            15,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      onTap:
+                                                          () {
+                                                        if (_isProgress ==
+                                                            false &&
+                                                            (int.parse(_controller[index].text.trim()) >
+                                                                0)) {
+                                                          removeFromCart(
+                                                              index);
+                                                        }
+                                                      },
+                                                    ),
+                                                    SizedBox(
+                                                      width: 37,
+                                                      height:
+                                                      20,
+                                                      child:
+                                                      Stack(
+                                                        children: [
+                                                          TextField(
+                                                            textAlign:
+                                                            TextAlign.center,
+                                                            readOnly:
+                                                            true,
+                                                            style:
+                                                            TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.fontColor),
+                                                            controller:
+                                                            _controller[index],
+                                                            // _controller[index],
+                                                            decoration:
+                                                            const InputDecoration(
+                                                              border: InputBorder.none,
+                                                            ),
+                                                          ),
+                                                          PopupMenuButton<
+                                                              String>(
+                                                            tooltip:
+                                                            '',
+                                                            icon:
+                                                            const Icon(
+                                                              Icons.arrow_drop_down,
+                                                              size: 1,
+                                                            ),
+                                                            onSelected:
+                                                                (String value) {
+                                                              if (_isProgress == false) {
+                                                                (
+                                                                index,
+                                                                value,
+                                                                2
+                                                                );
+                                                              }
+                                                            },
+                                                            itemBuilder:
+                                                                (BuildContext context) {
+                                                              return model.itemsCounter!.map<PopupMenuItem<String>>((String value) {
+                                                                return PopupMenuItem(value: value, child: Text(value, style: TextStyle(color: Theme.of(context).colorScheme.fontColor)));
+                                                              }).toList();
+                                                            },
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    // ),
 
-                                                                    InkWell(
-                                                                      child:
-                                                                          Card(
-                                                                        shape:
-                                                                            RoundedRectangleBorder(
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(50),
-                                                                        ),
-                                                                        child:
-                                                                            const Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(8.0),
-                                                                          child:
-                                                                              Icon(
-                                                                            Icons.add,
-                                                                            size:
-                                                                                15,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      onTap:
-                                                                          () {
-                                                                        if (_isProgress ==
-                                                                            false) {
-                                                                          addToCart(
-                                                                              index,
-                                                                              (int.parse(_controller[index].text) + int.parse(model.qtyStepSize!)).toString(),
-                                                                              2);
-                                                                        }
-                                                                      },
-                                                                    )
-                                                                  ],
-                                                                ),
-                                                              ],
-                                                            )
-                                                          : const SizedBox
-                                                              .shrink(),
-                                                ],
-                                              )
+                                                    InkWell(
+                                                      child:
+                                                      Card(
+                                                        shape:
+                                                        RoundedRectangleBorder(
+                                                          borderRadius:
+                                                          BorderRadius.circular(50),
+                                                        ),
+                                                        child:
+                                                        const Padding(
+                                                          padding:
+                                                          EdgeInsets.all(8.0),
+                                                          child:
+                                                          Icon(
+                                                            Icons.add,
+                                                            size:
+                                                            15,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      onTap:
+                                                          () {
+                                                        if (_isProgress ==
+                                                            false) {
+                                                          addToCart(
+                                                              index,
+                                                              (int.parse(_controller[index].text) + int.parse(model.qtyStepSize!)).toString(),
+                                                              2);
+                                                        }
+                                                      },
+                                                    )
+                                                  ],
+                                                ),
+                                              ],
+                                            )
+                                                : const SizedBox
+                                                .shrink(),
+                                          ],
+                                        )
                                             : const SizedBox.shrink(),
                                       ],
                                     ),
@@ -752,37 +776,37 @@ class StateProduct extends State<ProductListScreen>
                       ),
                       if (cartBtnList)
                         _controller[index].text == "0" &&
-                                model.availability != "0"
+                            model.availability != "0"
                             ? Positioned.directional(
-                                textDirection: Directionality.of(context),
-                                bottom: -15,
-                                end: 65,
-                                child: InkWell(
-                                  onTap: () {
-                                    if (_isProgress == false) {
-                                      addToCart(
-                                          index,
-                                          (int.parse(_controller[index].text) +
-                                                  int.parse(model.qtyStepSize!))
-                                              .toString(),
-                                          1);
-                                    }
-                                  },
-                                  child: Card(
-                                    elevation: 1,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(50),
-                                    ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: Icon(
-                                        Icons.shopping_cart_outlined,
-                                        size: 20,
-                                      ),
-                                    ),
-                                  ),
+                          textDirection: Directionality.of(context),
+                          bottom: -15,
+                          end: 65,
+                          child: InkWell(
+                            onTap: () {
+                              if (_isProgress == false) {
+                                addToCart(
+                                    index,
+                                    (int.parse(_controller[index].text) +
+                                        int.parse(model.qtyStepSize!))
+                                        .toString(),
+                                    1);
+                              }
+                            },
+                            child: Card(
+                              elevation: 1,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Icon(
+                                  Icons.shopping_cart_outlined,
+                                  size: 20,
                                 ),
-                              )
+                              ),
+                            ),
+                          ),
+                        )
                             : const SizedBox.shrink(),
                       Positioned.directional(
                           textDirection: Directionality.of(context),
@@ -795,66 +819,66 @@ class StateProduct extends State<ProductListScreen>
                               ),
                               child: model.isFavLoading!
                                   ? Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primarytheme,
-                                            strokeWidth: 0.7,
-                                          )),
-                                    )
+                                padding: const EdgeInsets.all(8.0),
+                                child: SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primarytheme,
+                                      strokeWidth: 0.7,
+                                    )),
+                              )
                                   : Selector<FavoriteProvider, List<String?>>(
-                                      builder: (context, data, child) {
-                                        return InkWell(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Icon(
-                                              !data.contains(model.id)
-                                                  ? Icons.favorite_border
-                                                  : Icons.favorite,
-                                              size: 20,
-                                            ),
-                                          ),
-                                          onTap: () {
-                                            if (context
-                                                    .read<UserProvider>()
-                                                    .userId !=
-                                                "") {
-                                              !data.contains(model.id)
-                                                  ? _setFav(-1, model)
-                                                  : _removeFav(-1, model);
-                                            } else {
-                                              if (!data.contains(model.id)) {
-                                                model.isFavLoading = true;
-                                                model.isFav = "1";
-                                                context
-                                                    .read<FavoriteProvider>()
-                                                    .addFavItem(model);
-                                                db.addAndRemoveFav(
-                                                    model.id!, true);
-                                                model.isFavLoading = false;
-                                              } else {
-                                                model.isFavLoading = true;
-                                                model.isFav = "0";
-                                                context
-                                                    .read<FavoriteProvider>()
-                                                    .removeFavItem(model
-                                                        .prVarientList![0].id!);
-                                                db.addAndRemoveFav(
-                                                    model.id!, false);
-                                                model.isFavLoading = false;
-                                              }
-                                              setState(() {});
-                                            }
-                                          },
-                                        );
-                                      },
-                                      selector: (_, provider) =>
-                                          provider.favIdList,
-                                    )))
+                                builder: (context, data, child) {
+                                  return InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Icon(
+                                        !data.contains(model.id)
+                                            ? Icons.favorite_border
+                                            : Icons.favorite,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      if (context
+                                          .read<UserProvider>()
+                                          .userId !=
+                                          "") {
+                                        !data.contains(model.id)
+                                            ? _setFav(-1, model)
+                                            : _removeFav(-1, model);
+                                      } else {
+                                        if (!data.contains(model.id)) {
+                                          model.isFavLoading = true;
+                                          model.isFav = "1";
+                                          context
+                                              .read<FavoriteProvider>()
+                                              .addFavItem(model);
+                                          db.addAndRemoveFav(
+                                              model.id!, true);
+                                          model.isFavLoading = false;
+                                        } else {
+                                          model.isFavLoading = true;
+                                          model.isFav = "0";
+                                          context
+                                              .read<FavoriteProvider>()
+                                              .removeFavItem(model
+                                              .prVarientList![0].id!);
+                                          db.addAndRemoveFav(
+                                              model.id!, false);
+                                          model.isFavLoading = false;
+                                        }
+                                        setState(() {});
+                                      }
+                                    },
+                                  );
+                                },
+                                selector: (_, provider) =>
+                                provider.favIdList,
+                              )))
                     ],
                   );
                 },
@@ -1072,7 +1096,7 @@ class StateProduct extends State<ProductListScreen>
     }
   }
 
-  Future getProduct(String top, {bool? clear}) async {
+  Future getProduct(String top, {bool? clear, String? selectedBrandId}) async {
     productFetchingIsOngoing = true;
     _isNetworkAvail = await isNetworkAvailable();
     if (_isNetworkAvail) {
@@ -1081,6 +1105,7 @@ class StateProduct extends State<ProductListScreen>
           if (mounted) {
             setState(() {
               isLoadingmore = false;
+              // ignore: invalid_use_of_protected_member
               if (_controller1.hasListeners && _controller1.text.isNotEmpty) {
                 _isLoading = true;
               }
@@ -1090,16 +1115,17 @@ class StateProduct extends State<ProductListScreen>
           var parameter = {
             SEARCH: query.trim(),
             LIMIT: perPage.toString(),
-            OFFSET: offset.toString(),
+            if (selectedBrandId == null) OFFSET: offset.toString(),
             TOP_RETAED: top,
+            "brand_id": selectedBrandId ?? "0",
           };
 
           if (context.read<UserProvider>().userId != "") {
             parameter[USER_ID] = context.read<UserProvider>().userId;
           }
-          if (selId != "") {
-            parameter[ATTRIBUTE_VALUE_ID] = selId;
-          }
+          // if (selId != "") {
+          //   parameter[ATTRIBUTE_VALUE_ID] = selId;
+          // }
           print("id----->${widget.id}");
           if (widget.tag! && widget.name == null) parameter[TAG] = widget.name!;
           if (widget.id != null) {
@@ -1143,36 +1169,36 @@ class StateProduct extends State<ProductListScreen>
           }
 
           await apiBaseHelper.postAPICall(getProductApi, parameter).then(
-              (getdata) {
-            bool error = getdata["error"];
-            String? msg = getdata["message"];
+                  (getdata) {
+                bool error = getdata["error"];
+                String? msg = getdata["message"];
 
-            if (_isFirstLoad) {
-              filterList = getdata["filters"];
+                if (_isFirstLoad) {
+                  filterList = getdata["filters"];
 
-              minPrice = getdata[MINPRICE].toString();
-              maxPrice = getdata[MAXPRICE].toString();
+                  minPrice = getdata[MINPRICE].toString();
+                  maxPrice = getdata[MAXPRICE].toString();
 
-              _isFirstLoad = false;
-            }
+                  _isFirstLoad = false;
+                }
 
-            Map<String, dynamic> tempData = getdata;
+                Map<String, dynamic> tempData = getdata;
 
-            String? search = getdata['search'];
+                String? search = getdata['search'];
 
-            _isLoading = false;
-            if (offset == 0) notificationisnodata = error;
+                _isLoading = false;
+                if (offset == 0) notificationisnodata = error;
 
-            if (!error) {
-              print("producttotal-->$total");
-              print("adminpantotal-->${getdata["total"]}");
+                if (!error) {
+                  print("producttotal-->$total");
+                  print("adminpantotal-->${getdata["total"]}");
 
-              total = int.parse(getdata["total"] ?? '0');
-              print("product--total-->${total.toString()}");
-              if (mounted) {
-                Future.delayed(
-                    Duration.zero,
-                    () => setState(() {
+                  total = int.parse(getdata["total"] ?? '0');
+                  print("product--total-->${total.toString()}");
+                  if (mounted) {
+                    Future.delayed(
+                        Duration.zero,
+                            () => setState(() {
                           if ((offset) < total) {
                             List mainlist = getdata['data'];
 
@@ -1198,23 +1224,23 @@ class StateProduct extends State<ProductListScreen>
                             isLoadingmore = false;
                           }
                         }));
-              }
-            } else {
-              if (msg != "Products Not Found !") {
-                // print("totalproductlist--->");
-                notificationisnodata = true;
-              }
-              isLoadingmore = false;
-              if (mounted) setState(() {});
-            }
+                  }
+                } else {
+                  if (msg != "Products Not Found !") {
+                    // print("totalproductlist--->");
+                    notificationisnodata = true;
+                  }
+                  isLoadingmore = false;
+                  if (mounted) setState(() {});
+                }
 
-            if (mounted) {
-              setState(() {
-                _isLoading = false;
-                isFilterClear = false;
-              });
-            }
-          }, onError: (error) {
+                if (mounted) {
+                  setState(() {
+                    _isLoading = false;
+                    isFilterClear = false;
+                  });
+                }
+              }, onError: (error) {
             setSnackbar(error.toString(), context);
           });
         }
@@ -1278,7 +1304,7 @@ class StateProduct extends State<ProductListScreen>
       }
 
       double price =
-          double.parse(model.prVarientList![model.selVarient!].disPrice!);
+      double.parse(model.prVarientList![model.selVarient!].disPrice!);
       if (price == 0) {
         price = double.parse(model.prVarientList![model.selVarient!].price!);
       }
@@ -1286,7 +1312,7 @@ class StateProduct extends State<ProductListScreen>
       double off = 0;
       if (model.prVarientList![model.selVarient!].disPrice! != "0") {
         off = (double.parse(model.prVarientList![model.selVarient!].price!) -
-                double.parse(model.prVarientList![model.selVarient!].disPrice!))
+            double.parse(model.prVarientList![model.selVarient!].disPrice!))
             .toDouble();
         off = off *
             100 /
@@ -1298,7 +1324,7 @@ class StateProduct extends State<ProductListScreen>
       }
 
       _controller[index].text =
-          model.prVarientList![model.selVarient!].cartCount!;
+      model.prVarientList![model.selVarient!].cartCount!;
 
       List att = [], val = [];
       if (model.prVarientList![model.selVarient!].attr_name != null) {
@@ -1315,7 +1341,7 @@ class StateProduct extends State<ProductListScreen>
           child: Selector<CartProvider, List<SectionModel>>(
               builder: (context, data, child) {
                 SectionModel? tempId = data.firstWhereOrNull((cp) =>
-                    cp.id == model.id &&
+                cp.id == model.id &&
                     cp.varientId ==
                         model.prVarientList![model.selVarient!].id!);
                 if (tempId != null) {
@@ -1323,7 +1349,7 @@ class StateProduct extends State<ProductListScreen>
                 } else {
                   if (context.read<UserProvider>().userId != "") {
                     _controller[index].text =
-                        model.prVarientList![model.selVarient!].cartCount!;
+                    model.prVarientList![model.selVarient!].cartCount!;
                   } else {
                     _controller[index].text = "0";
                   }
@@ -1353,7 +1379,7 @@ class StateProduct extends State<ProductListScreen>
                                           model.image!, width, false,
                                           height: double.maxFinite,
                                           width: double.maxFinite)
-                                      /*CachedNetworkImage(
+                                    /*CachedNetworkImage(
                                       fadeInDuration:
                                           const Duration(milliseconds: 150),
                                       imageUrl: model.image!,
@@ -1369,55 +1395,55 @@ class StateProduct extends State<ProductListScreen>
                                           (context, error, stackTrace) =>
                                               erroWidget(width),
                                     ),*/
-                                      )),
+                                  )),
                               Positioned.fill(
                                   child: model.availability == "0"
                                       ? Container(
-                                          height: 55,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .white70,
-                                          // width: double.maxFinite,
-                                          padding: const EdgeInsets.all(2),
-                                          child: Center(
-                                            child: Text(
-                                              getTranslated(
-                                                  context, 'OUT_OF_STOCK_LBL')!,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall!
-                                                  .copyWith(
-                                                    color: Colors.red,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        )
+                                    height: 55,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .white70,
+                                    // width: double.maxFinite,
+                                    padding: const EdgeInsets.all(2),
+                                    child: Center(
+                                      child: Text(
+                                        getTranslated(
+                                            context, 'OUT_OF_STOCK_LBL')!,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall!
+                                            .copyWith(
+                                          color: Colors.red,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  )
                                       : const SizedBox.shrink()),
                               off != 0
                                   ? Align(
-                                      alignment: Alignment.topLeft,
-                                      child: Container(
-                                        decoration: const BoxDecoration(
-                                          color: colors.red,
-                                        ),
-                                        margin: const EdgeInsets.all(5),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(5.0),
-                                          child: Text(
-                                            model.isSalesOn == "1"
-                                                ? double.parse(model.saleDis!)
-                                                    .toStringAsFixed(2)
-                                                : "${off.toStringAsFixed(2)}%",
-                                            style: const TextStyle(
-                                                color: colors.whiteTemp,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 9),
-                                          ),
-                                        ),
-                                      ),
-                                    )
+                                alignment: Alignment.topLeft,
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    color: colors.red,
+                                  ),
+                                  margin: const EdgeInsets.all(5),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: Text(
+                                      model.isSalesOn == "1"
+                                          ? double.parse(model.saleDis!)
+                                          .toStringAsFixed(2)
+                                          : "${off.toStringAsFixed(2)}%",
+                                      style: const TextStyle(
+                                          color: colors.whiteTemp,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 9),
+                                    ),
+                                  ),
+                                ),
+                              )
                                   : const SizedBox.shrink(),
                               const Divider(
                                 height: 1,
@@ -1433,280 +1459,280 @@ class StateProduct extends State<ProductListScreen>
                                       model.availability == "0"
                                           ? const SizedBox.shrink()
                                           : _controller[index].text == "0"
-                                              ? InkWell(
-                                                  onTap: () {
-                                                    if (_isProgress == false) {
-                                                      addToCart(
-                                                          index,
-                                                          (int.parse(_controller[
-                                                                          index]
-                                                                      .text) +
-                                                                  int.parse(model
-                                                                      .qtyStepSize!))
-                                                              .toString(),
-                                                          1);
-                                                    }
-                                                  },
-                                                  child: Card(
-                                                    elevation: 1,
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              50),
-                                                    ),
-                                                    child: const Padding(
-                                                      padding:
-                                                          EdgeInsets.all(8.0),
-                                                      child: Icon(
-                                                        Icons
-                                                            .shopping_cart_outlined,
-                                                        size: 15,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                )
-                                              : Padding(
+                                          ? InkWell(
+                                        onTap: () {
+                                          if (_isProgress == false) {
+                                            addToCart(
+                                                index,
+                                                (int.parse(_controller[
+                                                index]
+                                                    .text) +
+                                                    int.parse(model
+                                                        .qtyStepSize!))
+                                                    .toString(),
+                                                1);
+                                          }
+                                        },
+                                        child: Card(
+                                          elevation: 1,
+                                          shape:
+                                          RoundedRectangleBorder(
+                                            borderRadius:
+                                            BorderRadius.circular(
+                                                50),
+                                          ),
+                                          child: const Padding(
+                                            padding:
+                                            EdgeInsets.all(8.0),
+                                            child: Icon(
+                                              Icons
+                                                  .shopping_cart_outlined,
+                                              size: 15,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                          : Padding(
+                                        padding:
+                                        const EdgeInsetsDirectional
+                                            .only(
+                                            start: 3.0,
+                                            bottom: 5,
+                                            top: 3),
+                                        child: Row(
+                                          children: <Widget>[
+                                            InkWell(
+                                              child: Card(
+                                                shape:
+                                                RoundedRectangleBorder(
+                                                  borderRadius:
+                                                  BorderRadius
+                                                      .circular(
+                                                      50),
+                                                ),
+                                                child: const Padding(
                                                   padding:
-                                                      const EdgeInsetsDirectional
-                                                          .only(
-                                                          start: 3.0,
-                                                          bottom: 5,
-                                                          top: 3),
-                                                  child: Row(
-                                                    children: <Widget>[
-                                                      InkWell(
-                                                        child: Card(
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        50),
-                                                          ),
-                                                          child: const Padding(
-                                                            padding:
-                                                                EdgeInsets.all(
-                                                                    8.0),
-                                                            child: Icon(
-                                                              Icons.remove,
-                                                              size: 15,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        onTap: () {
-                                                          if (_isProgress ==
-                                                                  false &&
-                                                              (int.parse(_controller[
-                                                                          index]
-                                                                      .text) >
-                                                                  0)) {
-                                                            removeFromCart(
-                                                                index);
-                                                          }
-                                                        },
-                                                      ),
-                                                      Container(
-                                                        width: 37,
-                                                        height: 20,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .white,
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(5),
-                                                        ),
-                                                        child: Stack(
-                                                          children: [
-                                                            TextField(
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                              readOnly: true,
-                                                              style: TextStyle(
-                                                                  fontSize: 12,
-                                                                  color: Theme.of(
-                                                                          context)
-                                                                      .colorScheme
-                                                                      .fontColor),
-                                                              controller:
-                                                                  _controller[
-                                                                      index],
-                                                              decoration:
-                                                                  const InputDecoration(
-                                                                border:
-                                                                    InputBorder
-                                                                        .none,
-                                                              ),
-                                                            ),
-                                                            PopupMenuButton<
-                                                                String>(
-                                                              tooltip: '',
-                                                              icon: const Icon(
-                                                                Icons
-                                                                    .arrow_drop_down,
-                                                                size: 0,
-                                                              ),
-                                                              onSelected:
-                                                                  (String
-                                                                      value) {
-                                                                if (_isProgress ==
-                                                                    false) {
-                                                                  addToCart(
-                                                                      index,
-                                                                      value,
-                                                                      2);
-                                                                }
-                                                              },
-                                                              itemBuilder:
-                                                                  (BuildContext
-                                                                      context) {
-                                                                return model
-                                                                    .itemsCounter!
-                                                                    .map<
-                                                                        PopupMenuItem<
-                                                                            String>>((String
-                                                                        value) {
-                                                                  return PopupMenuItem(
-                                                                      value:
-                                                                          value,
-                                                                      child: Text(
-                                                                          value,
-                                                                          style:
-                                                                              TextStyle(color: Theme.of(context).colorScheme.fontColor)));
-                                                                }).toList();
-                                                              },
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ), // ),
-
-                                                      InkWell(
-                                                        child: Card(
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        50),
-                                                          ),
-                                                          child: const Padding(
-                                                            padding:
-                                                                EdgeInsets.all(
-                                                                    8.0),
-                                                            child: Icon(
-                                                              Icons.add,
-                                                              size: 15,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        onTap: () {
-                                                          if (_isProgress ==
-                                                              false) {
-                                                            addToCart(
-                                                                index,
-                                                                (int.parse(_controller[index]
-                                                                            .text) +
-                                                                        int.parse(
-                                                                            model.qtyStepSize!))
-                                                                    .toString(),
-                                                                2);
-                                                          }
-                                                        },
-                                                      )
-                                                    ],
+                                                  EdgeInsets.all(
+                                                      8.0),
+                                                  child: Icon(
+                                                    Icons.remove,
+                                                    size: 15,
                                                   ),
                                                 ),
+                                              ),
+                                              onTap: () {
+                                                if (_isProgress ==
+                                                    false &&
+                                                    (int.parse(_controller[
+                                                    index]
+                                                        .text) >
+                                                        0)) {
+                                                  removeFromCart(
+                                                      index);
+                                                }
+                                              },
+                                            ),
+                                            Container(
+                                              width: 37,
+                                              height: 20,
+                                              decoration:
+                                              BoxDecoration(
+                                                color:
+                                                Theme.of(context)
+                                                    .colorScheme
+                                                    .white,
+                                                borderRadius:
+                                                BorderRadius
+                                                    .circular(5),
+                                              ),
+                                              child: Stack(
+                                                children: [
+                                                  TextField(
+                                                    textAlign:
+                                                    TextAlign
+                                                        .center,
+                                                    readOnly: true,
+                                                    style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Theme.of(
+                                                            context)
+                                                            .colorScheme
+                                                            .fontColor),
+                                                    controller:
+                                                    _controller[
+                                                    index],
+                                                    decoration:
+                                                    const InputDecoration(
+                                                      border:
+                                                      InputBorder
+                                                          .none,
+                                                    ),
+                                                  ),
+                                                  PopupMenuButton<
+                                                      String>(
+                                                    tooltip: '',
+                                                    icon: const Icon(
+                                                      Icons
+                                                          .arrow_drop_down,
+                                                      size: 0,
+                                                    ),
+                                                    onSelected:
+                                                        (String
+                                                    value) {
+                                                      if (_isProgress ==
+                                                          false) {
+                                                        addToCart(
+                                                            index,
+                                                            value,
+                                                            2);
+                                                      }
+                                                    },
+                                                    itemBuilder:
+                                                        (BuildContext
+                                                    context) {
+                                                      return model
+                                                          .itemsCounter!
+                                                          .map<
+                                                          PopupMenuItem<
+                                                              String>>((String
+                                                      value) {
+                                                        return PopupMenuItem(
+                                                            value:
+                                                            value,
+                                                            child: Text(
+                                                                value,
+                                                                style:
+                                                                TextStyle(color: Theme.of(context).colorScheme.fontColor)));
+                                                      }).toList();
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ), // ),
+
+                                            InkWell(
+                                              child: Card(
+                                                shape:
+                                                RoundedRectangleBorder(
+                                                  borderRadius:
+                                                  BorderRadius
+                                                      .circular(
+                                                      50),
+                                                ),
+                                                child: const Padding(
+                                                  padding:
+                                                  EdgeInsets.all(
+                                                      8.0),
+                                                  child: Icon(
+                                                    Icons.add,
+                                                    size: 15,
+                                                  ),
+                                                ),
+                                              ),
+                                              onTap: () {
+                                                if (_isProgress ==
+                                                    false) {
+                                                  addToCart(
+                                                      index,
+                                                      (int.parse(_controller[index]
+                                                          .text) +
+                                                          int.parse(
+                                                              model.qtyStepSize!))
+                                                          .toString(),
+                                                      2);
+                                                }
+                                              },
+                                            )
+                                          ],
+                                        ),
+                                      ),
                                     Card(
                                         elevation: 1,
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
-                                              BorderRadius.circular(50),
+                                          BorderRadius.circular(50),
                                         ),
                                         child: model.isFavLoading!
                                             ? Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: SizedBox(
-                                                    height: 15,
-                                                    width: 15,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .primarytheme,
-                                                      strokeWidth: 0.7,
-                                                    )),
-                                              )
-                                            : Selector<FavoriteProvider,
-                                                List<String?>>(
-                                                builder:
-                                                    (context, data, child) {
-                                                  return InkWell(
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
-                                                      child: Icon(
-                                                        !data.contains(model.id)
-                                                            ? Icons
-                                                                .favorite_border
-                                                            : Icons.favorite,
-                                                        size: 15,
-                                                      ),
-                                                    ),
-                                                    onTap: () {
-                                                      if (context
-                                                              .read<
-                                                                  UserProvider>()
-                                                              .userId !=
-                                                          "") {
-                                                        !data.contains(model.id)
-                                                            ? _setFav(-1, model)
-                                                            : _removeFav(
-                                                                -1, model);
-                                                      } else {
-                                                        if (!data.contains(
-                                                            model.id)) {
-                                                          model.isFavLoading =
-                                                              true;
-                                                          model.isFav = "1";
-                                                          context
-                                                              .read<
-                                                                  FavoriteProvider>()
-                                                              .addFavItem(
-                                                                  model);
-                                                          db.addAndRemoveFav(
-                                                              model.id!, true);
-                                                          model.isFavLoading =
-                                                              false;
-                                                        } else {
-                                                          model.isFavLoading =
-                                                              true;
-                                                          model.isFav = "0";
-                                                          context
-                                                              .read<
-                                                                  FavoriteProvider>()
-                                                              .removeFavItem(model
-                                                                  .prVarientList![
-                                                                      0]
-                                                                  .id!);
-                                                          db.addAndRemoveFav(
-                                                              model.id!, false);
-                                                          model.isFavLoading =
-                                                              false;
-                                                        }
-                                                        setState(() {});
-                                                      }
-                                                    },
-                                                  );
-                                                },
-                                                selector: (_, provider) =>
-                                                    provider.favIdList,
+                                          padding:
+                                          const EdgeInsets.all(8.0),
+                                          child: SizedBox(
+                                              height: 15,
+                                              width: 15,
+                                              child:
+                                              CircularProgressIndicator(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primarytheme,
+                                                strokeWidth: 0.7,
                                               )),
+                                        )
+                                            : Selector<FavoriteProvider,
+                                            List<String?>>(
+                                          builder:
+                                              (context, data, child) {
+                                            return InkWell(
+                                              child: Padding(
+                                                padding:
+                                                const EdgeInsets.all(
+                                                    8.0),
+                                                child: Icon(
+                                                  !data.contains(model.id)
+                                                      ? Icons
+                                                      .favorite_border
+                                                      : Icons.favorite,
+                                                  size: 15,
+                                                ),
+                                              ),
+                                              onTap: () {
+                                                if (context
+                                                    .read<
+                                                    UserProvider>()
+                                                    .userId !=
+                                                    "") {
+                                                  !data.contains(model.id)
+                                                      ? _setFav(-1, model)
+                                                      : _removeFav(
+                                                      -1, model);
+                                                } else {
+                                                  if (!data.contains(
+                                                      model.id)) {
+                                                    model.isFavLoading =
+                                                    true;
+                                                    model.isFav = "1";
+                                                    context
+                                                        .read<
+                                                        FavoriteProvider>()
+                                                        .addFavItem(
+                                                        model);
+                                                    db.addAndRemoveFav(
+                                                        model.id!, true);
+                                                    model.isFavLoading =
+                                                    false;
+                                                  } else {
+                                                    model.isFavLoading =
+                                                    true;
+                                                    model.isFav = "0";
+                                                    context
+                                                        .read<
+                                                        FavoriteProvider>()
+                                                        .removeFavItem(model
+                                                        .prVarientList![
+                                                    0]
+                                                        .id!);
+                                                    db.addAndRemoveFav(
+                                                        model.id!, false);
+                                                    model.isFavLoading =
+                                                    false;
+                                                  }
+                                                  setState(() {});
+                                                }
+                                              },
+                                            );
+                                          },
+                                          selector: (_, provider) =>
+                                          provider.favIdList,
+                                        )),
                                   ],
                                 ),
                               ),
@@ -1715,7 +1741,7 @@ class StateProduct extends State<ProductListScreen>
                         ),
                         Padding(
                             padding:
-                                const EdgeInsets.symmetric(horizontal: 5.0),
+                            const EdgeInsets.symmetric(horizontal: 5.0),
                             child: Row(
                               children: [
                                 RatingBarIndicator(
@@ -1739,17 +1765,17 @@ class StateProduct extends State<ProductListScreen>
                             )),
                         Padding(
                             padding:
-                                const EdgeInsets.symmetric(horizontal: 5.0),
+                            const EdgeInsets.symmetric(horizontal: 5.0),
                             child: Row(
                               children: [
                                 Text(
                                     model.isSalesOn == "1"
                                         ? getPriceFormat(
-                                            context,
-                                            double.parse(model
-                                                .prVarientList![
-                                                    model.selVarient!]
-                                                .saleFinalPrice!))!
+                                        context,
+                                        double.parse(model
+                                            .prVarientList![
+                                        model.selVarient!]
+                                            .saleFinalPrice!))!
                                         : '${getPriceFormat(context, price)!} ',
                                     style: TextStyle(
                                         color: Theme.of(context)
@@ -1757,41 +1783,41 @@ class StateProduct extends State<ProductListScreen>
                                             .fontColor,
                                         fontWeight: FontWeight.bold)),
                                 double.parse(model
-                                            .prVarientList![model.selVarient!]
-                                            .disPrice!) !=
-                                        0
+                                    .prVarientList![model.selVarient!]
+                                    .disPrice!) !=
+                                    0
                                     ? Flexible(
-                                        child: Row(
-                                          children: <Widget>[
-                                            Flexible(
-                                              child: Text(
-                                                double.parse(model
-                                                            .prVarientList![model
-                                                                .selVarient!]
-                                                            .disPrice!) !=
-                                                        0
-                                                    ? getPriceFormat(
-                                                        context,
-                                                        double.parse(model
-                                                            .prVarientList![model
-                                                                .selVarient!]
-                                                            .price!))!
-                                                    : "",
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .labelSmall!
-                                                    .copyWith(
-                                                        decoration:
-                                                            TextDecoration
-                                                                .lineThrough,
-                                                        letterSpacing: 0),
-                                              ),
-                                            ),
-                                          ],
+                                  child: Row(
+                                    children: <Widget>[
+                                      Flexible(
+                                        child: Text(
+                                          double.parse(model
+                                              .prVarientList![model
+                                              .selVarient!]
+                                              .disPrice!) !=
+                                              0
+                                              ? getPriceFormat(
+                                              context,
+                                              double.parse(model
+                                                  .prVarientList![model
+                                                  .selVarient!]
+                                                  .price!))!
+                                              : "",
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall!
+                                              .copyWith(
+                                              decoration:
+                                              TextDecoration
+                                                  .lineThrough,
+                                              letterSpacing: 0),
                                         ),
-                                      )
+                                      ),
+                                    ],
+                                  ),
+                                )
                                     : const SizedBox.shrink()
                               ],
                             )),
@@ -1801,59 +1827,59 @@ class StateProduct extends State<ProductListScreen>
                             children: [
                               Expanded(
                                 child: model.prVarientList![model.selVarient!]
-                                                .attr_name !=
-                                            null &&
-                                        model.prVarientList![model.selVarient!]
-                                            .attr_name!.isNotEmpty
+                                    .attr_name !=
+                                    null &&
+                                    model.prVarientList![model.selVarient!]
+                                        .attr_name!.isNotEmpty
                                     ? ListView.builder(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 5.0),
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        shrinkWrap: true,
-                                        itemCount:
-                                            att.length >= 2 ? 2 : att.length,
-                                        itemBuilder: (context, index) {
-                                          return Row(children: [
-                                            Flexible(
-                                              child: Text(
-                                                att[index].trim() + ":",
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall!
-                                                    .copyWith(
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .lightBlack),
-                                              ),
+                                    padding:
+                                    const EdgeInsets.only(bottom: 5.0),
+                                    physics:
+                                    const NeverScrollableScrollPhysics(),
+                                    shrinkWrap: true,
+                                    itemCount:
+                                    att.length >= 2 ? 2 : att.length,
+                                    itemBuilder: (context, index) {
+                                      return Row(children: [
+                                        Flexible(
+                                          child: Text(
+                                            att[index].trim() + ":",
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall!
+                                                .copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .lightBlack),
+                                          ),
+                                        ),
+                                        Flexible(
+                                          child: Padding(
+                                            padding:
+                                            const EdgeInsetsDirectional
+                                                .only(start: 5.0),
+                                            child: Text(
+                                              val[index],
+                                              maxLines: 1,
+                                              overflow:
+                                              TextOverflow.visible,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall!
+                                                  .copyWith(
+                                                  color:
+                                                  Theme.of(context)
+                                                      .colorScheme
+                                                      .lightBlack,
+                                                  fontWeight:
+                                                  FontWeight.bold),
                                             ),
-                                            Flexible(
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsetsDirectional
-                                                        .only(start: 5.0),
-                                                child: Text(
-                                                  val[index],
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.visible,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall!
-                                                      .copyWith(
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .lightBlack,
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                ),
-                                              ),
-                                            )
-                                          ]);
-                                        })
+                                          ),
+                                        )
+                                      ]);
+                                    })
                                     : const SizedBox.shrink(),
                               ),
                             ],
@@ -1868,9 +1894,9 @@ class StateProduct extends State<ProductListScreen>
                                 .textTheme
                                 .titleMedium!
                                 .copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .lightBlack),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .lightBlack),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1915,200 +1941,200 @@ class StateProduct extends State<ProductListScreen>
       builder: (builder) {
         return StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-          return SingleChildScrollView(
-            child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                            top: 19.0, bottom: 16.0),
-                        child: Text(
-                          getTranslated(context, 'SORT_BY')!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge!
-                              .copyWith(
+              return SingleChildScrollView(
+                child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                                top: 19.0, bottom: 16.0),
+                            child: Text(
+                              getTranslated(context, 'SORT_BY')!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge!
+                                  .copyWith(
                                   color:
-                                      Theme.of(context).colorScheme.fontColor),
-                        )),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      sortBy = '';
-                      orderBy = 'DESC';
-                      if (mounted) {
-                        setState(() {
-                          _isLoading = true;
-                          total = 0;
-                          offset = 0;
-                          productList.clear();
-                        });
-                      }
-                      getProduct("1");
-                      Navigator.pop(context, 'option 1');
-                    },
-                    child: Container(
-                      width: deviceWidth,
-                      color: sortBy == ''
-                          ? Theme.of(context).colorScheme.primarytheme
-                          : Theme.of(context).colorScheme.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                      child: Text(getTranslated(context, 'TOP_RATED')!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium!
-                              .copyWith(
-                                  color: sortBy == ''
-                                      ? Theme.of(context).colorScheme.white
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .fontColor)),
-                    ),
-                  ),
-                  InkWell(
-                      child: Container(
+                                  Theme.of(context).colorScheme.fontColor),
+                            )),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          sortBy = '';
+                          orderBy = 'DESC';
+                          if (mounted) {
+                            setState(() {
+                              _isLoading = true;
+                              total = 0;
+                              offset = 0;
+                              productList.clear();
+                            });
+                          }
+                          getProduct("1");
+                          Navigator.pop(context, 'option 1');
+                        },
+                        child: Container(
                           width: deviceWidth,
-                          color: sortBy == 'p.date_added' && orderBy == 'DESC'
+                          color: sortBy == ''
                               ? Theme.of(context).colorScheme.primarytheme
                               : Theme.of(context).colorScheme.white,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 20, vertical: 15),
-                          child: Text(getTranslated(context, 'F_NEWEST')!,
+                          child: Text(getTranslated(context, 'TOP_RATED')!,
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium!
                                   .copyWith(
+                                  color: sortBy == ''
+                                      ? Theme.of(context).colorScheme.white
+                                      : Theme.of(context)
+                                      .colorScheme
+                                      .fontColor)),
+                        ),
+                      ),
+                      InkWell(
+                          child: Container(
+                              width: deviceWidth,
+                              color: sortBy == 'p.date_added' && orderBy == 'DESC'
+                                  ? Theme.of(context).colorScheme.primarytheme
+                                  : Theme.of(context).colorScheme.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 15),
+                              child: Text(getTranslated(context, 'F_NEWEST')!,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium!
+                                      .copyWith(
                                       color: sortBy == 'p.date_added' &&
-                                              orderBy == 'DESC'
+                                          orderBy == 'DESC'
                                           ? Theme.of(context).colorScheme.white
                                           : Theme.of(context)
-                                              .colorScheme
-                                              .fontColor))),
-                      onTap: () {
-                        sortBy = 'p.date_added';
-                        orderBy = 'DESC';
-                        if (mounted) {
-                          setState(() {
-                            _isLoading = true;
-                            total = 0;
-                            offset = 0;
-                            productList.clear();
-                          });
-                        }
-                        getProduct("0");
-                        Navigator.pop(context, 'option 1');
-                      }),
-                  InkWell(
-                      child: Container(
-                          width: deviceWidth,
-                          color: sortBy == 'p.date_added' && orderBy == 'ASC'
-                              ? Theme.of(context).colorScheme.primarytheme
-                              : Theme.of(context).colorScheme.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 15),
-                          child: Text(
-                            getTranslated(context, 'F_OLDEST')!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium!
-                                .copyWith(
+                                          .colorScheme
+                                          .fontColor))),
+                          onTap: () {
+                            sortBy = 'p.date_added';
+                            orderBy = 'DESC';
+                            if (mounted) {
+                              setState(() {
+                                _isLoading = true;
+                                total = 0;
+                                offset = 0;
+                                productList.clear();
+                              });
+                            }
+                            getProduct("0");
+                            Navigator.pop(context, 'option 1');
+                          }),
+                      InkWell(
+                          child: Container(
+                              width: deviceWidth,
+                              color: sortBy == 'p.date_added' && orderBy == 'ASC'
+                                  ? Theme.of(context).colorScheme.primarytheme
+                                  : Theme.of(context).colorScheme.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 15),
+                              child: Text(
+                                getTranslated(context, 'F_OLDEST')!,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium!
+                                    .copyWith(
                                     color: sortBy == 'p.date_added' &&
-                                            orderBy == 'ASC'
+                                        orderBy == 'ASC'
                                         ? Theme.of(context).colorScheme.white
                                         : Theme.of(context)
-                                            .colorScheme
-                                            .fontColor),
-                          )),
-                      onTap: () {
-                        sortBy = 'p.date_added';
-                        orderBy = 'ASC';
-                        if (mounted) {
-                          setState(() {
-                            _isLoading = true;
-                            total = 0;
-                            offset = 0;
-                            productList.clear();
-                          });
-                        }
-                        getProduct("0");
-                        Navigator.pop(context, 'option 2');
-                      }),
-                  InkWell(
-                      child: Container(
-                          width: deviceWidth,
-                          color: sortBy == 'pv.price' && orderBy == 'ASC'
-                              ? Theme.of(context).colorScheme.primarytheme
-                              : Theme.of(context).colorScheme.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 15),
-                          child: Text(
-                            getTranslated(context, 'F_LOW')!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium!
-                                .copyWith(
+                                        .colorScheme
+                                        .fontColor),
+                              )),
+                          onTap: () {
+                            sortBy = 'p.date_added';
+                            orderBy = 'ASC';
+                            if (mounted) {
+                              setState(() {
+                                _isLoading = true;
+                                total = 0;
+                                offset = 0;
+                                productList.clear();
+                              });
+                            }
+                            getProduct("0");
+                            Navigator.pop(context, 'option 2');
+                          }),
+                      InkWell(
+                          child: Container(
+                              width: deviceWidth,
+                              color: sortBy == 'pv.price' && orderBy == 'ASC'
+                                  ? Theme.of(context).colorScheme.primarytheme
+                                  : Theme.of(context).colorScheme.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 15),
+                              child: Text(
+                                getTranslated(context, 'F_LOW')!,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium!
+                                    .copyWith(
                                     color: sortBy == 'pv.price' &&
-                                            orderBy == 'ASC'
+                                        orderBy == 'ASC'
                                         ? Theme.of(context).colorScheme.white
                                         : Theme.of(context)
-                                            .colorScheme
-                                            .fontColor),
-                          )),
-                      onTap: () {
-                        sortBy = 'pv.price';
-                        orderBy = 'ASC';
-                        if (mounted) {
-                          setState(() {
-                            _isLoading = true;
-                            total = 0;
-                            offset = 0;
-                            productList.clear();
-                          });
-                        }
-                        getProduct("0");
-                        Navigator.pop(context, 'option 3');
-                      }),
-                  InkWell(
-                      child: Container(
-                          width: deviceWidth,
-                          color: sortBy == 'pv.price' && orderBy == 'DESC'
-                              ? Theme.of(context).colorScheme.primarytheme
-                              : Theme.of(context).colorScheme.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 15),
-                          child: Text(
-                            getTranslated(context, 'F_HIGH')!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium!
-                                .copyWith(
+                                        .colorScheme
+                                        .fontColor),
+                              )),
+                          onTap: () {
+                            sortBy = 'pv.price';
+                            orderBy = 'ASC';
+                            if (mounted) {
+                              setState(() {
+                                _isLoading = true;
+                                total = 0;
+                                offset = 0;
+                                productList.clear();
+                              });
+                            }
+                            getProduct("0");
+                            Navigator.pop(context, 'option 3');
+                          }),
+                      InkWell(
+                          child: Container(
+                              width: deviceWidth,
+                              color: sortBy == 'pv.price' && orderBy == 'DESC'
+                                  ? Theme.of(context).colorScheme.primarytheme
+                                  : Theme.of(context).colorScheme.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 15),
+                              child: Text(
+                                getTranslated(context, 'F_HIGH')!,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium!
+                                    .copyWith(
                                     color: sortBy == 'pv.price' &&
-                                            orderBy == 'DESC'
+                                        orderBy == 'DESC'
                                         ? Theme.of(context).colorScheme.white
                                         : Theme.of(context)
-                                            .colorScheme
-                                            .fontColor),
-                          )),
-                      onTap: () {
-                        sortBy = 'pv.price';
-                        orderBy = 'DESC';
-                        if (mounted) {
-                          setState(() {
-                            _isLoading = true;
-                            total = 0;
-                            offset = 0;
-                            productList.clear();
-                          });
-                        }
-                        getProduct("0");
-                        Navigator.pop(context, 'option 4');
-                      }),
-                ]),
-          );
-        });
+                                        .colorScheme
+                                        .fontColor),
+                              )),
+                          onTap: () {
+                            sortBy = 'pv.price';
+                            orderBy = 'DESC';
+                            if (mounted) {
+                              setState(() {
+                                _isLoading = true;
+                                total = 0;
+                                offset = 0;
+                                productList.clear();
+                              });
+                            }
+                            getProduct("0");
+                            Navigator.pop(context, 'option 4');
+                          }),
+                    ]),
+              );
+            });
       },
     );
   }
@@ -2193,13 +2219,13 @@ class StateProduct extends State<ProductListScreen>
             if (add) {
               prList.add(productList[index]);
               context.read<CartProvider>().addCartItem(SectionModel(
-                    qty: qty,
-                    productList: prList,
-                    varientId: productList[index]
-                        .prVarientList![productList[index].selVarient!]
-                        .id!,
-                    id: productList[index].id,
-                  ));
+                qty: qty,
+                productList: prList,
+                varientId: productList[index]
+                    .prVarientList![productList[index].selVarient!]
+                    .id!,
+                id: productList[index].id,
+              ));
             }
           } else {
             setSnackbar(
@@ -2259,7 +2285,7 @@ class StateProduct extends State<ProductListScreen>
                   padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
                   child: Container(
                     decoration:
-                        BoxDecoration(borderRadius: BorderRadius.circular(25)),
+                    BoxDecoration(borderRadius: BorderRadius.circular(25)),
                     height: 44,
                     child: TextField(
                       style: TextStyle(
@@ -2284,7 +2310,7 @@ class StateProduct extends State<ProductListScreen>
                             ),
                           ),
                           contentPadding:
-                              const EdgeInsets.fromLTRB(15.0, 5.0, 0, 5.0),
+                          const EdgeInsets.fromLTRB(15.0, 5.0, 0, 5.0),
                           border: const OutlineInputBorder(
                             borderSide: BorderSide(color: Colors.transparent),
                             borderRadius: BorderRadius.all(
@@ -2299,50 +2325,50 @@ class StateProduct extends State<ProductListScreen>
                               .textTheme
                               .bodyMedium!
                               .copyWith(
-                                color: Theme.of(context).colorScheme.fontColor,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w400,
-                                fontStyle: FontStyle.normal,
-                              ),
+                            color: Theme.of(context).colorScheme.fontColor,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            fontStyle: FontStyle.normal,
+                          ),
                           prefixIcon: Padding(
                               padding: const EdgeInsets.all(15.0),
                               child: Icon(
                                 Icons.search,
                                 color:
-                                    Theme.of(context).colorScheme.primarytheme,
+                                Theme.of(context).colorScheme.primarytheme,
                               )),
                           suffixIcon: _controller1.text != ''
                               ? IconButton(
-                                  onPressed: () {
-                                    FocusScope.of(context).unfocus();
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
 
-                                    _controller1.text = '';
-                                    offset = 0;
-                                    getProduct('0');
-                                  },
-                                  icon: Icon(
-                                    Icons.close,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primarytheme,
-                                  ),
-                                )
+                              _controller1.text = '';
+                              offset = 0;
+                              getProduct('0');
+                            },
+                            icon: Icon(
+                              Icons.close,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primarytheme,
+                            ),
+                          )
                               : InkWell(
-                                  child: Icon(
-                                    Icons.mic,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primarytheme,
-                                  ),
-                                  onTap: () {
-                                    lastWords = '';
-                                    if (!_hasSpeech) {
-                                      initSpeechState();
-                                    } else {
-                                      showSpeechDialog();
-                                    }
-                                  },
-                                )),
+                            child: Icon(
+                              Icons.mic,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primarytheme,
+                            ),
+                            onTap: () {
+                              lastWords = '';
+                              if (!_hasSpeech) {
+                                initSpeechState();
+                              } else {
+                                showSpeechDialog();
+                              }
+                            },
+                          )),
                     ),
                   ),
                 ),
@@ -2355,50 +2381,50 @@ class StateProduct extends State<ProductListScreen>
           child: _isLoading
               ? shimmer(context)
               : notificationisnodata
-                  ? getNoItem(context)
-                  : listType
-                      ? ExcludeSemantics(
-                          child: ListView.builder(
-                            controller: controller,
-                            shrinkWrap: true,
-                            addSemanticIndexes: false,
-                            addAutomaticKeepAlives: false,
-                            addRepaintBoundaries: false,
-                            itemCount: (offset < total)
-                                ? productList.length + 1
-                                : productList.length,
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              return (index == productList.length &&
-                                      isLoadingmore)
-                                  ? singleItemSimmer(context)
-                                  : listItem(index);
-                            },
-                          ),
-                        )
-                      : ExcludeSemantics(
-                          child: GridView.count(
-                              padding: const EdgeInsetsDirectional.only(top: 5),
-                              crossAxisCount: 2,
-                              controller: controller,
-                              addAutomaticKeepAlives: false,
-                              addRepaintBoundaries: false,
-                              addSemanticIndexes: false,
-                              childAspectRatio: 0.6,
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              children: List.generate(
-                                (offset < total)
-                                    ? productList.length + 1
-                                    : productList.length,
-                                (index) {
-                                  return (index == productList.length &&
-                                          isLoadingmore)
-                                      ? simmerSingleProduct(context)
-                                      : productItem(
-                                          index, index % 2 == 0 ? true : false);
-                                },
-                              )),
-                        ),
+              ? getNoItem(context)
+              : listType
+              ? ExcludeSemantics(
+            child: ListView.builder(
+              controller: controller,
+              shrinkWrap: true,
+              addSemanticIndexes: false,
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: false,
+              itemCount: (offset < total)
+                  ? productList.length + 1
+                  : productList.length,
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                return (index == productList.length &&
+                    isLoadingmore)
+                    ? singleItemSimmer(context)
+                    : listItem(index);
+              },
+            ),
+          )
+              : ExcludeSemantics(
+            child: GridView.count(
+                padding: const EdgeInsetsDirectional.only(top: 5),
+                crossAxisCount: 2,
+                controller: controller,
+                addAutomaticKeepAlives: false,
+                addRepaintBoundaries: false,
+                addSemanticIndexes: false,
+                childAspectRatio: 0.6,
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: List.generate(
+                  (offset < total)
+                      ? productList.length + 1
+                      : productList.length,
+                      (index) {
+                    return (index == productList.length &&
+                        isLoadingmore)
+                        ? simmerSingleProduct(context)
+                        : productItem(
+                        index, index % 2 == 0 ? true : false);
+                  },
+                )),
+          ),
         ),
       ],
     );
@@ -2486,74 +2512,74 @@ class StateProduct extends State<ProductListScreen>
   showSpeechDialog() {
     return dialogAnimate(context, StatefulBuilder(
         builder: (BuildContext context, StateSetter setStater1) {
-      setStater = setStater1;
-      return AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.lightWhite,
-        title: Text(
-          'Search for desired product',
-          style: Theme.of(context)
-              .textTheme
-              .titleMedium!
-              .copyWith(color: Theme.of(context).colorScheme.fontColor),
-          textAlign: TextAlign.center,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Container(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                      blurRadius: .26,
-                      spreadRadius: level * 1.5,
-                      color:
+          setStater = setStater1;
+          return AlertDialog(
+            backgroundColor: Theme.of(context).colorScheme.lightWhite,
+            title: Text(
+              'Search for desired product',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium!
+                  .copyWith(color: Theme.of(context).colorScheme.fontColor),
+              textAlign: TextAlign.center,
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Container(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                          blurRadius: .26,
+                          spreadRadius: level * 1.5,
+                          color:
                           Theme.of(context).colorScheme.black.withOpacity(.05))
-                ],
-                color: Theme.of(context).colorScheme.white,
-                borderRadius: const BorderRadius.all(Radius.circular(50)),
-              ),
-              child: IconButton(
-                  icon: Icon(
-                    Icons.mic,
-                    color: Theme.of(context).colorScheme.primarytheme,
+                    ],
+                    color: Theme.of(context).colorScheme.white,
+                    borderRadius: const BorderRadius.all(Radius.circular(50)),
                   ),
-                  onPressed: () {
-                    if (!_hasSpeech) {
-                      initSpeechState();
-                    } else {
-                      !_hasSpeech || speech.isListening
-                          ? null
-                          : startListening();
-                    }
-                  }),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(lastWords),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              color: Theme.of(context).colorScheme.fontColor.withOpacity(0.1),
-              child: Center(
-                child: speech.isListening
-                    ? Text(
-                        "I'm listening...",
-                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                            color: Theme.of(context).colorScheme.fontColor,
-                            fontWeight: FontWeight.bold),
-                      )
-                    : Text(
-                        'Not listening',
-                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                            color: Theme.of(context).colorScheme.fontColor,
-                            fontWeight: FontWeight.bold),
+                  child: IconButton(
+                      icon: Icon(
+                        Icons.mic,
+                        color: Theme.of(context).colorScheme.primarytheme,
                       ),
-              ),
+                      onPressed: () {
+                        if (!_hasSpeech) {
+                          initSpeechState();
+                        } else {
+                          !_hasSpeech || speech.isListening
+                              ? null
+                              : startListening();
+                        }
+                      }),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(lastWords),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  color: Theme.of(context).colorScheme.fontColor.withOpacity(0.1),
+                  child: Center(
+                    child: speech.isListening
+                        ? Text(
+                      "I'm listening...",
+                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                          color: Theme.of(context).colorScheme.fontColor,
+                          fontWeight: FontWeight.bold),
+                    )
+                        : Text(
+                      'Not listening',
+                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                          color: Theme.of(context).colorScheme.fontColor,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      );
-    }));
+          );
+        }));
   }
 
   Future<void> initSpeechState() async {
@@ -2670,10 +2696,10 @@ class StateProduct extends State<ProductListScreen>
             onTap: () {
               productList.isNotEmpty
                   ? setState(() {
-                      _animationController!.reverse();
-                      _animationController1!.reverse();
-                      listType = !listType;
-                    })
+                _animationController!.reverse();
+                _animationController1!.reverse();
+                listType = !listType;
+              })
                   : null;
             },
           ),
@@ -2694,60 +2720,67 @@ class StateProduct extends State<ProductListScreen>
         _currentRangeValues =
             RangeValues(double.parse(minPrice), double.parse(maxPrice));
         return StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-          return Column(mainAxisSize: MainAxisSize.min, children: [
-            Padding(
-                padding: const EdgeInsetsDirectional.only(top: 30.0),
-                child: AppBar(
-                  title: Text(
-                    getTranslated(context, 'FILTER')!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.fontColor,
-                    ),
-                  ),
-                  centerTitle: true,
-                  elevation: 5,
-                  backgroundColor: Theme.of(context).colorScheme.white,
-                  leading: Builder(builder: (BuildContext context) {
-                    return Container(
-                      margin: const EdgeInsets.all(10),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(4),
-                        onTap: () => Navigator.of(context).pop(),
-                        child: Padding(
-                          padding: const EdgeInsetsDirectional.only(end: 4.0),
-                          child: Icon(Icons.arrow_back_ios_rounded,
-                              color:
-                                  Theme.of(context).colorScheme.primarytheme),
-                        ),
+          builder: (BuildContext context, StateSetter setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(top: 30.0),
+                  child: AppBar(
+                    title: Text(
+                      getTranslated(context, 'FILTER')!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.fontColor,
                       ),
-                    );
-                  }),
-                )),
-            Expanded(
-                child: Container(
-              color: Theme.of(context).colorScheme.lightWhite,
-              padding: const EdgeInsetsDirectional.only(
-                  start: 7.0, end: 7.0, top: 7.0),
-              child: filterList != null
-                  ? ListView.builder(
-                      shrinkWrap: true,
-                      scrollDirection: Axis.vertical,
-                      padding: const EdgeInsetsDirectional.only(top: 10.0),
-                      itemCount: filterList.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return Column(
-                            children: [
-                              SizedBox(
-                                  width: deviceWidth,
-                                  child: Card(
-                                      elevation: 0,
-                                      child: Padding(
+                    ),
+                    centerTitle: true,
+                    elevation: 5,
+                    backgroundColor: Theme.of(context).colorScheme.white,
+                    leading: Builder(builder: (BuildContext context) {
+                      return Container(
+                        margin: const EdgeInsets.all(10),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(4),
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 4.0),
+                            child: Icon(
+                              Icons.arrow_back_ios_rounded,
+                              color: Theme.of(context).colorScheme.primarytheme,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      // Price Range Filter for Products
+                      Container(
+                        color: Theme.of(context).colorScheme.lightWhite,
+                        padding: const EdgeInsetsDirectional.only(
+                            start: 7.0, end: 7.0, top: 7.0),
+                        child: ListView.builder(
+                            shrinkWrap: true,
+                            scrollDirection: Axis.vertical,
+                            padding:
+                            const EdgeInsetsDirectional.only(top: 10.0),
+                            itemCount: filterList.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index == 0) {
+                                return Column(
+                                  children: [
+                                    SizedBox(
+                                      width: deviceWidth,
+                                      child: Card(
+                                        elevation: 0,
+                                        child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
                                             mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                            MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
                                                 'Price Range',
@@ -2755,277 +2788,407 @@ class StateProduct extends State<ProductListScreen>
                                                     .textTheme
                                                     .titleMedium!
                                                     .copyWith(
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .lightBlack,
-                                                        fontWeight:
-                                                            FontWeight.normal),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .lightBlack,
+                                                  fontWeight:
+                                                  FontWeight.normal,
+                                                ),
                                                 overflow: TextOverflow.ellipsis,
                                                 maxLines: 2,
                                               ),
                                               Text(
-                                                '${getPriceFormat(context, _currentRangeValues!.start.roundToDouble())!} - ${getPriceFormat(context, _currentRangeValues!.end.roundToDouble())!}',
+                                                '${getPriceFormat(context, _currentRangeValues!.start.roundToDouble())} - ${getPriceFormat(context, _currentRangeValues!.end.roundToDouble())}',
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .titleMedium!
                                                     .copyWith(
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .lightBlack,
-                                                        fontWeight:
-                                                            FontWeight.normal),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .lightBlack,
+                                                  fontWeight:
+                                                  FontWeight.normal,
+                                                ),
                                                 overflow: TextOverflow.ellipsis,
                                                 maxLines: 2,
                                               ),
                                             ],
-                                          )))),
-                              SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  showValueIndicator: ShowValueIndicator.never,
-                                ),
-                                child: RangeSlider(
-                                  values: _currentRangeValues!,
-                                  min: double.parse(minPrice),
-                                  max: double.parse(maxPrice),
-                                  divisions: 10,
-                                  activeColor: Theme.of(context)
-                                      .colorScheme
-                                      .primarytheme,
-                                  labels: RangeLabels(
-                                    _currentRangeValues!.start
-                                        .round()
-                                        .toString(),
-                                    _currentRangeValues!.end.round().toString(),
-                                  ),
-                                  onChanged: (RangeValues values) {
-                                    setState(() {
-                                      _currentRangeValues = values;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          );
-                        } else {
-                          index = index - 1;
-                          attsubList =
-                              filterList[index]['attribute_values'].split(',');
-
-                          attListId = filterList[index]['attribute_values_id']
-                              .split(',');
-
-                          List<Widget?> chips = [];
-                          List<String> att =
-                              filterList[index]['attribute_values']!.split(',');
-
-                          List<String> attSType =
-                              filterList[index]['swatche_type'].split(',');
-
-                          List<String> attSValue =
-                              filterList[index]['swatche_value'].split(',');
-
-                          for (int i = 0; i < att.length; i++) {
-                            Widget itemLabel;
-                            if (attSType[i] == "1") {
-                              String clr = (attSValue[i].substring(1));
-
-                              String color = "0xff$clr";
-
-                              itemLabel = Container(
-                                width: 25,
-                                decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color(int.parse(color))),
-                              );
-                            } else if (attSType[i] == "2") {
-                              itemLabel = ClipRRect(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  child: Image.network(attSValue[i],
-                                      width: 80,
-                                      height: 80,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              erroWidget(context, 80)));
-                            } else {
-                              itemLabel = Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
-                                child: Text(att[i],
-                                    style: TextStyle(
-                                        color:
-                                            selectedId.contains(attListId![i])
-                                                ? Theme.of(context)
-                                                    .colorScheme
-                                                    .white
-                                                : Theme.of(context)
-                                                    .colorScheme
-                                                    .fontColor)),
-                              );
-                            }
-
-                            choiceChip = ChoiceChip(
-                              selected: selectedId.contains(attListId![i]),
-                              label: itemLabel,
-                              labelPadding: const EdgeInsets.all(0),
-                              selectedColor:
-                                  Theme.of(context).colorScheme.primarytheme,
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                    attSType[i] == "1" ? 100 : 10),
-                                side: BorderSide(
-                                    color: selectedId.contains(attListId![i])
-                                        ? Theme.of(context)
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    SliderTheme(
+                                      data: SliderTheme.of(context).copyWith(
+                                        showValueIndicator:
+                                        ShowValueIndicator.never,
+                                      ),
+                                      child: RangeSlider(
+                                        values: _currentRangeValues!,
+                                        min: double.parse(minPrice),
+                                        max: double.parse(maxPrice),
+                                        divisions: 10,
+                                        activeColor: Theme.of(context)
                                             .colorScheme
-                                            .primarytheme
-                                        : colors.black12,
-                                    width: 1.5),
-                              ),
-                              onSelected: (bool selected) {
+                                            .primarytheme,
+                                        labels: RangeLabels(
+                                          _currentRangeValues!.start
+                                              .round()
+                                              .toString(),
+                                          _currentRangeValues!.end
+                                              .round()
+                                              .toString(),
+                                        ),
+                                        onChanged: (RangeValues values) {
+                                          setState(() {
+                                            _currentRangeValues = values;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              } else {
+                                index = index - 1;
+                                attsubList = filterList[index]
+                                ['attribute_values']
+                                    .split(',');
                                 attListId = filterList[index]
-                                        ['attribute_values_id']
+                                ['attribute_values_id']
+                                    .split(',');
+                                List<Widget?> chips = [];
+                                List<String> att = filterList[index]
+                                ['attribute_values']!
+                                    .split(',');
+                                List<String> attSType = filterList[index]
+                                ['swatche_type']
+                                    .split(',');
+                                List<String> attSValue = filterList[index]
+                                ['swatche_value']
                                     .split(',');
 
-                                if (mounted) {
-                                  setState(() {
-                                    if (selected == true) {
-                                      selectedId.add(attListId![i]);
-                                    } else {
-                                      selectedId.remove(attListId![i]);
-                                    }
-                                  });
+                                for (int i = 0; i < att.length; i++) {
+                                  Widget itemLabel;
+                                  if (attSType[i] == "1") {
+                                    String clr = (attSValue[i].substring(1));
+                                    String color = "0xff$clr";
+                                    itemLabel = Container(
+                                      width: 25,
+                                      decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(int.parse(color))),
+                                    );
+                                  } else if (attSType[i] == "2") {
+                                    itemLabel = ClipRRect(
+                                      borderRadius: BorderRadius.circular(10.0),
+                                      child: Image.network(attSValue[i],
+                                          width: 80,
+                                          height: 80,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                              erroWidget(context, 80)),
+                                    );
+                                  } else {
+                                    itemLabel = Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0),
+                                      child: Text(att[i],
+                                          style: TextStyle(
+                                              color: selectedId
+                                                  .contains(attListId![i])
+                                                  ? Theme.of(context)
+                                                  .colorScheme
+                                                  .white
+                                                  : Theme.of(context)
+                                                  .colorScheme
+                                                  .fontColor)),
+                                    );
+                                  }
+                                  choiceChip = ChoiceChip(
+                                    selected:
+                                    selectedId.contains(attListId![i]),
+                                    label: itemLabel,
+                                    labelPadding: const EdgeInsets.all(0),
+                                    selectedColor: Theme.of(context)
+                                        .colorScheme
+                                        .primarytheme,
+                                    backgroundColor:
+                                    Theme.of(context).colorScheme.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          attSType[i] == "1" ? 100 : 10),
+                                      side: BorderSide(
+                                          color:
+                                          selectedId.contains(attListId![i])
+                                              ? Theme.of(context)
+                                              .colorScheme
+                                              .primarytheme
+                                              : colors.black12,
+                                          width: 1.5),
+                                    ),
+                                    onSelected: (bool selected) {
+                                      attListId = filterList[index]
+                                      ['attribute_values_id']
+                                          .split(',');
+                                      if (mounted) {
+                                        setState(() {
+                                          if (selected == true) {
+                                            selectedId.add(attListId![i]);
+                                          } else {
+                                            selectedId.remove(attListId![i]);
+                                          }
+                                        });
+                                      }
+                                    },
+                                  );
+                                  chips.add(choiceChip);
                                 }
-                              },
-                            );
 
-                            chips.add(choiceChip);
-                          }
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                width: deviceWidth,
-                                child: Card(
-                                  elevation: 0,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      filterList[index]['name'],
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium!
-                                          .copyWith(
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      width: deviceWidth,
+                                      child: Card(
+                                        elevation: 0,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            filterList[index]['name'],
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium!
+                                                .copyWith(
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .fontColor,
-                                              fontWeight: FontWeight.normal),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 2,
+                                              fontWeight: FontWeight.normal,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 2,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ),
-                              chips.isNotEmpty
-                                  ? Padding(
+                                    chips.isNotEmpty
+                                        ? Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Wrap(
-                                        children:
-                                            chips.map<Widget>((Widget? chip) {
+                                        children: chips
+                                            .map<Widget>((Widget? chip) {
                                           return Padding(
-                                            padding: const EdgeInsets.all(2.0),
+                                            padding:
+                                            const EdgeInsets.all(2.0),
                                             child: chip,
                                           );
                                         }).toList(),
                                       ),
                                     )
-                                  : const SizedBox.shrink()
+                                        : const SizedBox.shrink()
+                                  ],
+                                );
+                              }
+                            }),
+                      ),
+
+                      // Brand Filter
+                      Consumer<GetBrandsProvider>(
+                        builder: (context, providerBrand, child) {
+                          final brandData = providerBrand.brandModel?.data;
+
+                          if (brandData == null || brandData.isEmpty) {
+                            return const Center(child: Text('No brands available.'));
+                          }
+
+                          if (isselectedBrands.length != brandData.length) {
+                            isselectedBrands =
+                            List<bool>.filled(brandData.length, false);
+                          }
+
+                          return Column(
+                            children: [
+                              // Add the price range slider for brand filtering
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20.0),
+                                child: Column(
+                                  children: [
+                                    // Price Range Label
+                                    SizedBox(
+                                      width: deviceWidth,
+                                      child: Card(
+                                        elevation: 0,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                'Brand',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleMedium!
+                                                    .copyWith(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .lightBlack,
+                                                  fontWeight:
+                                                  FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 2,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              ListView.separated(
+                                shrinkWrap: true,
+                                itemCount: brandData.length,
+                                itemBuilder: (context, index) {
+                                  final brand = brandData[index];
+                                  final brandName = brand.name ?? 'Unknown';
+                                  return CheckboxListTile(
+                                    title: Text(
+                                      brandName,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                        fontWeight: FontWeight.normal,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    value: isselectedBrands[index],
+                                    onChanged: (value) {
+                                      setState(() {
+                                        isselectedBrands[index] =
+                                            value ?? false;
+                                        if (value == true) {
+                                          selectedId.add(brand.id.toString());
+                                        } else {
+                                          selectedId
+                                              .remove(brand.id.toString());
+                                        }
+                                        print("Selected brands: $selectedId");
+                                      });
+                                    },
+                                  );
+                                },
+                                separatorBuilder: (context, index) =>
+                                const SizedBox(height: 20),
+                              ),
                             ],
                           );
-                        }
-                      })
-                  : const SizedBox.shrink(),
-            )),
-            Container(
-              color: Theme.of(context).colorScheme.white,
-              child: Row(children: <Widget>[
-                Container(
-                  margin: const EdgeInsetsDirectional.only(start: 20),
-                  width: deviceWidth! * 0.4,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      if (mounted) {
-                        setState(() {
-                          selectedId.clear();
-                          isFilterClear = true;
-                          _currentRangeValues = RangeValues(
-                              double.parse(minPrice), double.parse(maxPrice));
-                        });
-                        //Navigator.pop(context);
-                      }
-                    },
-                    child: Text(
-                      getTranslated(
-                        context,
-                        'FILTER_CLEAR_LBL',
-                      )!,
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.primarytheme),
-                    ),
+                        },
+                      ),
+                    ],
                   ),
                 ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 20),
-                  child: SimBtn(
-                      width: 0.4,
-                      height: 35,
-                      title: getTranslated(context, 'APPLY'),
-                      onBtnSelected: () {
-                        print(
-                            "isfilterClear****$isFilterClear*******$selectedId");
-                        if (!isFilterClear) {
-                          if (selectedId.isEmpty) {
-                            selId = '';
+                Container(
+                  color: Theme.of(context).colorScheme.white,
+                  child: Row(children: <Widget>[
+                    Container(
+                      margin: const EdgeInsetsDirectional.only(start: 20),
+                      width: deviceWidth! * 0.4,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          if (mounted) {
+                            setState(() {
+                              selectedId.clear();
+                              isFilterClear = true;
+                              _currentRangeValues = RangeValues(
+                                  double.parse(minPrice),
+                                  double.parse(maxPrice));
+                            });
+                          }
+                        },
+                        child: Text(
+                          getTranslated(context, 'FILTER_CLEAR_LBL')!,
+                          style: TextStyle(
+                              color:
+                              Theme.of(context).colorScheme.primarytheme),
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 20),
+                      child: SimBtn(
+                        width: 0.4,
+                        height: 35,
+                        title: getTranslated(context, 'APPLY'),
+                        onBtnSelected: () {
+                          print(
+                            "isfilterClear****$isFilterClear*******${selectedId.join(',')}",
+                          );
+
+                          if (!isFilterClear) {
+                            if (selectedId.isEmpty) {
+                              selId = '';
+                            } else {
+                              setState(() {
+                                selId = selectedId.join(',');
+                                isLoadingmore = true;
+                                _isLoading = true;
+                                productList.clear();
+                                getProduct("0",
+                                    selectedBrandId: selectedId.join(','));
+                              });
+                            }
+
+                            if (mounted) {
+                              setState(() {
+                                _isLoading = true;
+                                total = 0;
+                                offset = 0;
+                                isLoadingmore = true;
+                                productList.clear();
+                              });
+                            }
+
+                            if (selectedId.isNotEmpty) {
+                              getProduct("0", selectedBrandId: selId);
+                            } else {
+                              getProduct("0", selectedBrandId: selId);
+                            }
                           } else {
-                            selId = selectedId.join(',');
+                            if (mounted) {
+                              setState(() {
+                                selId = "";
+                                query = '';
+                                sortBy = 'p.id';
+                                orderBy = "DESC";
+                                offset = 0;
+                                total = 0;
+                                isLoadingmore = true;
+                                _isLoading = true;
+                                productList.clear();
+                              });
+                            }
+
+                            getProduct("0",
+                                clear: true, selectedBrandId: selId);
                           }
 
-                          if (mounted) {
-                            setState(() {
-                              _isLoading = true;
-                              total = 0;
-                              offset = 0;
-                              isLoadingmore = true;
-                              productList.clear();
-                            });
-                          }
-                          getProduct("0");
-                        } else {
-                          if (mounted) {
-                            setState(() {
-                              selId = "";
-                              query = '';
-                              sortBy = 'p.id';
-                              orderBy = "DESC";
-                              offset = 0;
-                              total = 0;
-                              isLoadingmore = true;
-                              _isLoading = true;
-                              productList.clear();
-                            });
-                          }
-                          getProduct("0", clear: true);
-                        }
-
-                        Navigator.pop(context, 'Product Filter');
-                      }),
+                          Navigator.pop(context, 'Product Filter');
+                        },
+                      ),
+                    ),
+                  ]),
                 ),
-              ]),
-            )
-          ]);
-        });
+              ],
+            );
+          },
+        );
       },
     );
   }

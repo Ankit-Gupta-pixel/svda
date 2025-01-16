@@ -15,6 +15,7 @@ import 'package:eshop/Provider/ProductProvider.dart';
 import 'package:eshop/Provider/SmsServicesProvider.dart';
 import 'package:eshop/Provider/UserProvider.dart';
 import 'package:eshop/Provider/WhatsAppNumberProvider.dart';
+import 'package:eshop/Provider/get_brands.dart';
 import 'package:eshop/Provider/pushNotificationProvider.dart';
 import 'package:eshop/app/languages.dart';
 import 'package:eshop/cubits/brandsListCubit.dart';
@@ -159,6 +160,8 @@ void main() async {
             create: (context) => OrderProvider()),
         ChangeNotifierProvider<CartProvider>(
             create: (context) => CartProvider()),
+        ChangeNotifierProvider<GetBrandsProvider>(
+            create: (context) => GetBrandsProvider()),
         ChangeNotifierProvider<ProductProvider>(
             create: (context) => ProductProvider()),
         ChangeNotifierProvider<FlashSaleProvider>(
